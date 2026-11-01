@@ -66,7 +66,6 @@ Pin numbers in the UI (1–8) always mean **PCF8574 P0–P7**. Wire switch pin 1
 
 You can 3D print or otherwise fabricate a case to hold the ESP32-2432S028R, PCF8574 module, and membrane switch connector. Ensure the display and touch panel are accessible, and provide openings for the connectors and any optional speaker or RGB LED. I've included a basic 3D-printable design in the [case/](case/) directory as a starting point.
 
-
 ---
 
 ## Building and flashing
@@ -77,6 +76,30 @@ pio device monitor         # serial log (touch calibration values, PCF8574 statu
 ```
 
 If the colors look inverted (common on the dual-USB board revision), use `pio run -e cyd_inverted -t upload`. If the picture is garbled rather than just inverted, see the note in `platformio.ini` about the ST7789 driver.
+
+### Prebuilt firmware
+
+Every push to `main` builds both `cyd` and `cyd_inverted` with PlatformIO and publishes a new [GitHub release](https://github.com/excalbian/membrane-tester/releases) after both builds succeed. Releases use unique `firmware-<run number>-<run attempt>` tags and point to the commit that was built.
+
+Each release includes standalone `membrane-tester-<variant>.bin` firmware and complete `membrane-tester-<variant>-merged.bin` images containing the bootloader, partition table, and firmware. Use `cyd_inverted` if your display has inverted colors.
+
+To install a merged image, you can either use `esptool` (requires python and installing esptool) or the espressif web tool. `membrane-tester-<variant>-merged.bin` is a complete image (bootloader, partitions and app) suitable for loading with the espressif web tool or `esptool`.
+
+#### Option A: flash with esptool
+
+install esptool (`python -m pip install esptool==4.5.1`), connect the board, and flash at address `0x0` (replace the port and filename as needed):
+
+```bash
+python -m esptool --chip esp32 --port /dev/ttyUSB0 write_flash 0x0 membrane-tester-cyd-merged.bin
+```
+
+Standalone firmware is flashed at `0x10000` and requires the matching bootloader and partition table to already be installed.
+
+#### Option B: flash the prebuilt image, nothing to install
+
+1. Open https://espressif.github.io/esptool-js/ in Chrome or Edge
+1. Connect, choose the CYD's serial port, and set the flash address to **0x0**
+1. Program `membrane-tester-cyd-merged.bin`
 
 ---
 

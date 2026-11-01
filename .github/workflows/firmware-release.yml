@@ -1,0 +1,55 @@
+name: Build and release firmware
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  firmware:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install build tools
+        run: python -m pip install platformio==6.2.0 esptool==4.5.1
+
+      - name: Build both firmware variants
+        run: pio run -e cyd -e cyd_inverted
+
+      - name: Package firmware
+        run: |
+          mkdir -p dist
+          for variant in cyd cyd_inverted; do
+            cp ".pio/build/$variant/firmware.bin" "dist/membrane-tester-$variant.bin"
+            python -m esptool --chip esp32 merge_bin \
+              --output "dist/membrane-tester-$variant-merged.bin" \
+              --flash_mode dio --flash_freq 40m --flash_size 4MB \
+              0x1000 ".pio/build/$variant/bootloader.bin" \
+              0x8000 ".pio/build/$variant/partitions.bin" \
+              0xe000 "$HOME/.platformio/packages/framework-arduinoespressif32/tools/partitions/boot_app0.bin" \
+              0x10000 ".pio/build/$variant/firmware.bin"
+          done
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="firmware-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ATTEMPT}"
+          gh release create "$tag" dist/*.bin \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title "Firmware build ${GITHUB_RUN_NUMBER}.${GITHUB_RUN_ATTEMPT}" \
+            --notes "Built from commit ${GITHUB_SHA}. Both cyd and cyd_inverted variants are included. Flash a merged image at 0x0 for a complete installation, or flash the standalone firmware at 0x10000 only when the matching bootloader and partition table are already installed."
