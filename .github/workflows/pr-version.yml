@@ -1,0 +1,62 @@
+name: Check PR version
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  version:
+    name: Version bump
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Require a newer semantic version
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          import re
+          import subprocess
+
+          def fail(message):
+              print(f"::error file=include/version.h::{message}")
+              raise SystemExit(1)
+
+          def parse_version(source, label):
+              matches = re.findall(r'^#define APP_VERSION "([^"]+)"$', source, re.MULTILINE)
+              if len(matches) != 1:
+                  fail(f"{label} must define APP_VERSION exactly once.")
+              version = matches[0]
+              if not re.fullmatch(r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)", version):
+                  fail(f"{label} APP_VERSION must use MAJOR.MINOR.PATCH without leading zeros.")
+              return tuple(map(int, version.split(".")))
+
+          path = Path("include/version.h")
+          if not path.is_file():
+              fail("Every PR must provide include/version.h with a semantic version.")
+          current = parse_version(path.read_text(), "PR")
+          base_sha = os.environ["BASE_SHA"]
+          base_path = subprocess.check_output(
+              ["git", "ls-tree", "--name-only", base_sha, "--", str(path)], text=True
+          ).strip()
+          if base_path:
+              base_source = subprocess.check_output(
+                  ["git", "show", f"{base_sha}:{path}"], text=True
+              )
+              previous = parse_version(base_source, "Base branch")
+              if current <= previous:
+                  fail("Every PR must increase APP_VERSION above the base branch version.")
+              print(f"Version bump: {previous} -> {current}")
+          else:
+              print(f"Initial semantic version: {current}")
+          PY

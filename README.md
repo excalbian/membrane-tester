@@ -77,9 +77,38 @@ pio device monitor         # serial log (touch calibration values, PCF8574 statu
 
 If the colors look inverted (common on the dual-USB board revision), use `pio run -e cyd_inverted -t upload`. If the picture is garbled rather than just inverted, see the note in `platformio.ini` about the ST7789 driver.
 
+### Versioning
+
+The firmware version is defined in [`include/version.h`](include/version.h) using `MAJOR.MINOR.PATCH` semantic versioning. Increase the patch for compatible fixes, the minor version for backward-compatible features, and the major version for incompatible changes. The home-screen header displays this version.
+
+#### Pull requests and prereleases
+
+1. Make changes on a branch and open a pull request. Every PR, including documentation-only changes, must increase `APP_VERSION` in `include/version.h` above the base branch's version. The **Version bump** check fails for unchanged, lower, missing, or invalid versions. If the base branch does not yet have a version file, introducing a valid version satisfies the check. Update your branch and version if another PR merges with the same version first.
+2. Build both variants locally with `pio run -e cyd -e cyd_inverted`. PRs run the version check but do not build or publish firmware. To block merging when the check fails, configure **Version bump** as a required status check in the target branch's protection rules or ruleset.
+3. Merge the PR into `main`. The resulting push builds both variants and publishes a prerelease tagged `v<version>-build.<run>.<attempt>`, for example `v1.1.0-build.42.1`.
+4. Wait for the workflow to succeed and test the prerelease firmware on hardware before publishing a stable release.
+
+#### Publishing a stable release
+
+1. Ensure the intended changes and version bump are merged into `main`.
+2. With a clean working tree, update your local `main` and confirm `APP_VERSION` in `include/version.h`.
+3. Tag the tested release commit and push only that tag. For example, if `APP_VERSION` is `1.2.0` and the latest `main` commit is the tested commit:
+
+   ```bash
+   git switch main
+   git pull --ff-only origin main
+   git tag v1.2.0
+   git push origin v1.2.0
+   ```
+
+   If `main` has advanced since testing, tag the tested commit explicitly with `git tag v1.2.0 <tested-commit-sha>` instead.
+
+4. The tag push rebuilds both variants and publishes a stable GitHub release with the firmware assets. The tag must exactly match `v<APP_VERSION>`; a mismatch fails the workflow.
+5. Confirm the workflow succeeded and the release contains both variants. Do not move or reuse published version tags; publish a new version for subsequent fixes.
+
 ### Prebuilt firmware
 
-Every push to `main` builds both `cyd` and `cyd_inverted` with PlatformIO and publishes a new [GitHub release](https://github.com/excalbian/membrane-tester/releases) after both builds succeed. Releases use unique `firmware-<run number>-<run attempt>` tags and point to the commit that was built.
+Every push to `main` builds both `cyd` and `cyd_inverted` with PlatformIO and publishes a new [GitHub prerelease](https://github.com/excalbian/membrane-tester/releases) after both builds succeed. Pushing a version tag (`v<version>`) publishes a stable release; the workflow checks that the tag matches `APP_VERSION`. All releases point to the commit that was built.
 
 Each release includes standalone `membrane-tester-<variant>.bin` firmware and complete `membrane-tester-<variant>-merged.bin` images containing the bootloader, partition table, and firmware. Use `cyd_inverted` if your display has inverted colors.
 

@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "ui.h"
+#include "version.h"
 
 #define COL_BG      lv_color_hex(0x11161C)
 #define COL_PANEL   lv_color_hex(0x1C242D)
@@ -245,7 +246,9 @@ static void build_home() {
   g_scr = SCR_HOME;
   fb_led(false, false, false);
   lv_obj_t* scr = make_screen();
-  header(scr, "Membrane Tester", nullptr);
+  char title[32];
+  snprintf(title, sizeof(title), "Membrane Tester v%s", APP_VERSION);
+  header(scr, title, nullptr);
 
   home_tile(scr, 8, 42, LV_SYMBOL_PLAY, "Test",
             g_hasProf ? g_prof.name : "Pick a profile", COL_GREEN,
