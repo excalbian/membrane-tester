@@ -252,7 +252,11 @@ static void build_home() {
             [](lv_event_t*) { nav(g_hasProf ? build_test : build_profiles); });
   home_tile(scr, 164, 42, LV_SYMBOL_EDIT, "Learn", "Press keys to map", COL_ACCENT,
             [](lv_event_t*) { nav(build_learn); });
-  home_tile(scr, 8, 134, LV_SYMBOL_LIST, "Profiles", "Saved layouts", COL_AMBER,
+  int nProf = profiles_count();
+  char profSub[32];
+  if (nProf == 0) snprintf(profSub, sizeof(profSub), "None saved yet");
+  else snprintf(profSub, sizeof(profSub), "%d saved layout%s", nProf, nProf == 1 ? "" : "s");
+  home_tile(scr, 8, 134, LV_SYMBOL_LIST, "Profiles", profSub, COL_AMBER,
             [](lv_event_t*) { nav(build_profiles); });
   home_tile(scr, 164, 134, LV_SYMBOL_EYE_OPEN, "Pin monitor", "Live connections",
             lv_color_hex(0xA371F7), [](lv_event_t*) { nav(build_monitor); });
@@ -322,7 +326,10 @@ static void row_cb(lv_event_t* e) {
 static void build_profiles() {
   g_scr = SCR_PROFILES;
   lv_obj_t* scr = make_screen();
-  header(scr, "Profiles", build_home);
+  int n = profiles_count();
+  char title[32];
+  snprintf(title, sizeof(title), "Profiles (%d/%d)", n, MAX_PROFILES);
+  header(scr, title, build_home);
 
   lv_obj_t* list = plain(scr);
   lv_obj_add_flag(list, LV_OBJ_FLAG_SCROLLABLE);
@@ -333,7 +340,6 @@ static void build_profiles() {
   lv_obj_set_style_pad_row(list, 4, 0);
   lv_obj_set_flex_flow(list, LV_FLEX_FLOW_COLUMN);
 
-  int n = profiles_count();
   if (n == 0) {
     lv_obj_t* l = label(list, "No saved profiles.\nUse Learn to map a switch by pressing its keys, "
                               "or + Template for a standard layout.",
