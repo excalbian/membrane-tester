@@ -112,6 +112,8 @@ Every push to `main` builds both `cyd` and `cyd_inverted` with PlatformIO and pu
 
 Each release includes standalone `membrane-tester-<variant>.bin` firmware and complete `membrane-tester-<variant>-merged.bin` images containing the bootloader, partition table, and firmware. Use `cyd_inverted` if your display has inverted colors.
 
+Both stable releases and prereleases automatically include a GitHub-generated changelog with merged pull requests, contributors, and a full comparison link. GitHub selects the previous release as the comparison baseline. Firmware flashing instructions remain at the top of the release notes; no manual changelog file is required.
+
 To install a merged image, you can either use `esptool` (requires python and installing esptool) or the espressif web tool. `membrane-tester-<variant>-merged.bin` is a complete image (bootloader, partitions and app) suitable for loading with the espressif web tool or `esptool`.
 
 #### Option A: flash with esptool
@@ -126,7 +128,7 @@ Standalone firmware is flashed at `0x10000` and requires the matching bootloader
 
 #### Option B: flash the prebuilt image, nothing to install
 
-1. Open https://espressif.github.io/esptool-js/ in Chrome or Edge
+1. Open <https://espressif.github.io/esptool-js/> in Chrome or Edge
 1. Connect, choose the CYD's serial port, and set the flash address to **0x0**
 1. Program `membrane-tester-cyd-merged.bin`
 
