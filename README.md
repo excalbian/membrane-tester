@@ -175,6 +175,12 @@ Live view of all 8 pins. Pins that are connected to each other share a colour, a
 
 ---
 
+## Simulator
+
+The simulator allows you to run the membrane switch tester on a desktop environment using SDL2. It simulates the PCF8574 I/O expander, with the mouse acting as the touchscreen and the keyboard as the membrane switch under test. More details are available in the [sim](sim) directory.
+
+---
+
 ## Configuration (`src/config.h`)
 
 | Setting | Default | Notes |
@@ -211,3 +217,4 @@ Libraries: LVGL 9.2.2, TFT_eSPI 2.5.43, XPT2046_Touchscreen. Arduino-ESP32 core 
 
 - `docs/` contains screenshots and other documentation assets.
 - `case/` contains files related to the physical case of the tester
+- `sim/` contains the desktop simulator for the tester
