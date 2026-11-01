@@ -1,35 +1,57 @@
-# Case
+# Case (v2)
 
 ![](case_preview.png)
 
-The case is fully parametric (OpenSCAD). Outside size with the default values is **125.6 × 60.9 × 18.5 mm**.
+The case is parametric OpenSCAD, sized from grid photos of the actual parts. Outside size is **121.6 × 60.9 × 20.7 mm**.
 
-- **Base:** a tray that holds the CYD on 4 pillars. It also has a bay for the PCF8574, a slot for the 8-pin DUT header on the top edge, a USB cut-out, a stylus bore along the bottom edge, and recesses for stick-on feet.
-- **Bezel:** the front, with the display window (chamfered so the stylus reaches the screen edges), an engraved title, and a "1 ... 8" pin legend above the header.
+- **Test connector:** the membrane tail plugs straight onto the HW-171's own 9-pin male header (J1). The header comes through a window in the front, left of the screen. The pins stand **6.3 mm** proud of the case. The address jumpers and the chip are visible through the same window.
+- **Legend:** "1 … 8" and "INT" are engraved beside the pins.
+- **Speaker:** the 28 mm speaker sits in a ring on the floor under the module and fires through a grille in the base.
+- **Stylus:** slides into the bottom edge from the left end. A finger scoop lets you pinch the 3 mm that sticks out.
+- **Orientation:** USB-C on the right, matching `TFT_ROTATION 1`.
 
-The layout assumes **USB on the right (TFT_ROTATION 1)**. The PCF8574 bay and stylus entry sit at the left end. Set `usb_on_right = false` to flip it.
-
-## Printing
-| Part | File | Orientation | Notes |
-|---|---|---|---|
-| Base | `membrane_tester_base.stl` | floor down | no supports. The stylus bore is teardrop-shaped so it bridges cleanly |
-| Bezel | `membrane_tester_bezel.stl` | face down (already oriented) | no supports. The engraved text is on the bed side |
+## Files
+| File | Print orientation | Notes |
+|---|---|---|
+| `membrane_tester_fit_test.stl` | flat | **Print this first** (about 10 minutes). See below |
+| `membrane_tester_base.stl` | floor down | no supports |
+| `membrane_tester_bezel.stl` | face down (already oriented) | no supports |
 
 PLA or PETG, 0.2 mm layers, 3 walls, 20 % infill.
 
-## Hardware
-- **6 × M3×10 screws** (socket or pan head), all inserted from the back:
-  - 4 go through the base, through the CYD's corner holes, and into the bezel. These clamp the board.
-  - 2 go into the corners of the PCF8574 bay.
-  - They self-tap into the 2.6 mm pilot holes.
-- **1 × 8-pin 2.54 mm header.** Use a male header if your switch tails end in a female connector, like the common black 4×4 and 3×4 keypads do. Use a female header for bare or crimped-pin tails. Push the plastic body into the slot from inside so it sits on the shelf, then fix it with a drop of CA glue. Solder wires from the short pins to P0–P7, with **pin 1 (left, marked "1") going to P0**.
-- **4 × stick-on bumpers**, up to 8 mm diameter
-- The PCF8574 module sits flat in the bay. Fix it with double-sided foam tape.
+### Fit test
+The fit-test plate is a 1.2 mm copy of the front face. It has the screen window, the J1 window, holes at the board's four mounting holes, a notch at the USB-C position, and grooves outlining the PCB and the glass. To use it:
+1. Lay it on the CYD.
+2. Check that the 4 holes line up with the board's holes, the lit area sits in the window, and the notch lines up with the USB-C.
+3. Lay the HW-171 under the small window. The J1 pins and jumpers should poke through.
 
-## Stylus
-The bore is 4.5 mm for your 4 mm × 75 mm stylus. It leaves 3 mm sticking out into a finger scoop so you can pinch it. A 0.25 mm rib near the entry adds a little friction so it doesn't slide out:
+If anything is off, measure how far and in which direction, and adjust the matching value at the top of the `.scad` file:
+- Hole positions: `hole_inset_u` / `hole_inset_v`
+- Screen window: `view_u` / `view_v`
+- USB-C: `usb_v`
+
+## Prep
+1. **HW-171:**
+   - Snip **J3** (the right-angle I2C pins) and **J5** (the black female header) flush with the board. They don't fit under the front plate.
+   - Solder the 4 wires from the CYD's I2C connector (CN1) into J3's VCC / GND / SDA / SCL holes **from the underside**.
+   - J1, the address jumpers and the chip stay as they are.
+2. **CYD:** peel off the screen protector's green pull-tab. It sticks out past the top edge of the board.
+3. **Speaker:** a dab of hot glue in the ring holds it, cone facing the grille. Plug it into the CYD's SPEAK connector.
+
+## Assembly
+1. Drop the speaker into its ring and the CYD onto its 4 pillars.
+2. Lay the HW-171 on its 4 posts, J1 toward the outer wall.
+3. Fit the bezel. Its window and the small frame on its underside locate the module, and the front plate clamps it down onto the posts.
+4. Fit **6 × M3×10** screws from the back. Four go through the board's corner holes and clamp it. Two go into the bay corners. They self-tap into the bezel.
+5. Add 4 stick-on bumpers (≤ 8 mm) in the recesses. They lift the speaker grille off the desk.
+
+## Check the pin legend before printing
+The pin labels on the HW-171 are hidden under the yellow plastic, so check which end of J1 is P0:
+1. Open **Pin monitor**.
+2. Touch a jumper wire from **GND** to the J1 pin next to the jumpers.
+3. If the screen shows `GND: 1`, the default legend is right. If that pin does nothing (it's INT), set `p0_at_top = false` and re-export the bezel.
+
+## Stylus fit
+The bore is 4.5 mm for the 4 × 75 mm stylus, with a 0.25 mm friction rib near the entry:
 - If it's too tight, set `stylus_rib = 0`.
-- If it's too loose, raise `stylus_rib` to 0.35.
-
-## Adjusting
-Open `membrane_tester_case.scad` in OpenSCAD, use **Window → Customizer**, then **F6** to render and **F7** to export the STL. The values marked **MEASURE** are typical figures for the ESP32-2432S028R. Check them on your board before printing.
+- If it's too loose, set it to `0.35`.

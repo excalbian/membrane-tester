@@ -26,6 +26,7 @@ Note *screenshots come from the real UI code running in a desktop LVGL simulator
 - PCF8574 or PCF8574A module (the blue breakout boards with address jumpers work fine)
 - A connector that fits your membrane tails: 2.54 mm female header, a ZIF/FFC breakout, or a clincher connector wired to a header
 - Optional: 8 × 220–330 Ω series resistors between the PCF8574 and the switch connector (protects the expander if you probe something powered)
+- Optional: a speaker for audio feedback on key presses, passes, and faults
 
 ### Wiring
 
@@ -38,7 +39,7 @@ The CYD's **CN1** connector (4-pin JST 1.25 mm, labelled on the back of the boar
 | IO27    | PCF8574 **SDA**   |
 | 3V3     | PCF8574 VCC       |
 
-``` text
+```text
  PCF8574            Membrane switch tail
  P0  ─────────────  pin 1
  P1  ─────────────  pin 2
@@ -60,6 +61,11 @@ Pin numbers in the UI (1–8) always mean **PCF8574 P0–P7**. Wire switch pin 1
 - **Contact resistance:** a key reads as closed if it pulls the other pin below ~1 V against the PCF8574's ~100 µA pull-up. That means contacts below ~3 kΩ always register and up to ~10 kΩ usually do. That covers silver and carbon membranes. A key that intermittently fails may be a high-resistance contact, which is a real defect.
 - **Diodes:** switches with isolation diodes still work because the scan tests both directions.
 - **Ghosting:** in a matrix without diodes, holding 3 keys can make a 4th look pressed. The tester only credits a key when it is the *only* key closed, and shows "One key at a time" otherwise.
+
+### Optional Case
+
+You can 3D print or otherwise fabricate a case to hold the ESP32-2432S028R, PCF8574 module, and membrane switch connector. Ensure the display and touch panel are accessible, and provide openings for the connectors and any optional speaker or RGB LED. I've included a basic 3D-printable design in the [case/](case/) directory as a starting point.
+
 
 ---
 
@@ -137,7 +143,7 @@ Live view of all 8 pins. Pins that are connected to each other share a colour, a
 
 ## Code layout
 
-``` test
+``` text
 src/config.h     pins, calibration, timing
 src/model.*      PCF8574 scanner + debounce, profiles (NVS), test & learn logic
 src/ui.*         LVGL screens
@@ -146,3 +152,8 @@ include/lv_conf.h
 ```
 
 Libraries: LVGL 9.2.2, TFT_eSPI 2.5.43, XPT2046_Touchscreen. Arduino-ESP32 core 2.0.17 (espressif32 platform 6.9.0).
+
+## Other files
+
+- `docs/` contains screenshots and other documentation assets.
+- `case/` contains files related to the physical case of the tester
