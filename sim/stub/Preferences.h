@@ -11,7 +11,7 @@ class Preferences {
   void end() {}
   uint8_t getUChar(const char* k, uint8_t d) { auto it = sim_nvs.find(k); return it == sim_nvs.end() ? d : it->second[0]; }
   void putUChar(const char* k, uint8_t v) { sim_nvs[k] = {v}; }
-  size_t getBytes(const char* k, void* b, size_t n) { auto it = sim_nvs.find(k); if (it == sim_nvs.end()) return 0; size_t m = std::min(n, it->second.size()); memcpy(b, it->second.data(), m); return m; }
+  size_t getBytes(const char* k, void* b, size_t n) { auto it = sim_nvs.find(k); if (it == sim_nvs.end() || it->second.size() > n) return 0; size_t m = it->second.size(); memcpy(b, it->second.data(), m); return m; }
   size_t putBytes(const char* k, const void* b, size_t n) { sim_nvs[k] = std::vector<uint8_t>((const uint8_t*)b, (const uint8_t*)b + n); return n; }
   bool remove(const char* k) { return sim_nvs.erase(k); }
   void putString(const char* k, const char* v) { putBytes(k, v, strlen(v) + 1); }
