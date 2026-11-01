@@ -33,15 +33,15 @@ check:
 	  echo "Run 'pio run' in the project once, or: git clone -b v9.2.2 --depth 1 https://github.com/lvgl/lvgl.git && make LVGL_DIR=lvgl"; exit 1; }
 	@command -v sdl2-config >/dev/null || { echo "SDL2 not found: brew install sdl2  (or apt install libsdl2-dev)"; exit 1; }
 
-$(BUILD)/lvgl/%.o: $(LVGL_DIR)/%.c lv_conf.h
+$(BUILD)/lvgl/%.o: $(LVGL_DIR)/%.c lv_conf.h $(PROJ)/include/lv_conf.h
 	@mkdir -p $(dir $@)
 	@$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
-$(BUILD)/%.o: $(PROJ)/src/%.cpp $(wildcard $(PROJ)/src/*.h) $(wildcard $(PROJ)/include/*.h) lv_conf.h
+$(BUILD)/%.o: $(PROJ)/src/%.cpp $(wildcard $(PROJ)/src/*.h) $(wildcard $(PROJ)/include/*.h) $(wildcard stub/*.h) lv_conf.h
 	@mkdir -p $(BUILD)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
-$(BUILD)/sim_main.o: sim_main.cpp $(wildcard stub/*.h) lv_conf.h
+$(BUILD)/sim_main.o: sim_main.cpp $(wildcard stub/*.h) $(wildcard $(PROJ)/src/*.h) $(wildcard $(PROJ)/include/*.h) lv_conf.h
 	@mkdir -p $(BUILD)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
